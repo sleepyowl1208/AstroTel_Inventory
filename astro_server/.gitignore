@@ -1,0 +1,30 @@
+# Environment Variables (Sensitive Data)
+.env
+
+# Python Bytecode Files
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs & Debug Files
+*.log
+logs/
+
+# Virtual Environment (if using venv)
+venv/
+.env/
+
+# Database Dumps (if any)
+*.sqlite3
+*.db
+*.sql
+
+# Pytest Cache
+.cache/
+.pytest_cache/
+
+# Ignore IDE/Editor-Specific Files
+.vscode/
+.idea/
+*.swp
+.DS_Store
