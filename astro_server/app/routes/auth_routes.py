@@ -2,10 +2,12 @@
 from datetime import datetime, timedelta, UTC
 import jwt
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 import sys
 import os
@@ -73,32 +75,64 @@ def require_role(required_role: str):
 
 # **Login Route with Role-Based Token**
 @router.post("/login")
-#Flask native equivalent : @app.route("/login", methods=["POST"])
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """Authenticate user against the employees table"""
-    db = await get_db()
+ # Flask native equivalent : @app.route("/login", methods=["POST"])
+ # async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+@router.post("/login")
 
-    # Fetch user from database
-    query = "SELECT name, email, password_hash, role FROM employees WHERE email = $1"
-    #$1 is replaced by the actual email before execution.
-    user = await db.fetchrow(query, form_data.username)
+# static code
+# class LoginRequest(BaseModel):
+#     email: str
+#     password: str
+#
+# async def login(data: LoginRequest):
+#     if data.email == "krishna.tandon@astrotel.com" and data.password == "1208":
+#         return {"message": "Login successful"}
+#     raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not user or not verify_password(form_data.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+async def login(request: Request, db=Depends(get_db)):
+    try:
+        # Debugging: Check Content-Type
+        if request.headers.get("content-type") != "application/json":
+            return JSONResponse(status_code=415, content={"detail": "Unsupported Media Type. Use 'application/json'"})
 
-    #Extract first name
-    first_name = user["name"].split()[0]
+        # Debugging: Read raw body
+        raw_body = await request.body()
+        print(f"Raw Request Body: {raw_body.decode()}")
 
-    # Create JWT token with user role
-    token = create_access_token({
-        "sub": user["email"],
-        "role": user["role"],
-        "name": first_name})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "message": f"Welcome back {first_name}!. You are successfully logged in. 😊"
-    }
+        # Convert to JSON
+        data = await request.json()
+        print(f"Parsed JSON: {data}")  # Debugging
+
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return JSONResponse(status_code=400, content={"detail": "Email and password are required"})
+
+        # Fetch user from database
+        query = "SELECT name, email, password, role FROM employee WHERE email = $1"
+        user = await db.fetchrow(query, email)
+        print(f"user data received = {user}")
+        # if not user or not verify_password(password, user["password"]):
+        if not user or password != user["password"]:
+            return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
+
+        first_name = user["name"].split()[0]
+        token = create_access_token({"sub": user["email"], "role": user["role"], "name": first_name})
+
+        return JSONResponse(status_code=200, content={
+            "access_token": token,
+            "role": user["role"],
+            "token_type": "bearer",
+            "message": f"Welcome back {first_name}! You are successfully logged in. 😊",
+            "name": first_name
+        })
+
+    except Exception as e:
+        print(f"Error: {e}")  # Debugging log
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
 
 # **Logout Route**
 @router.post("/logout")
@@ -115,9 +149,13 @@ async def admin_dashboard(user: dict=Depends(get_current_user)):
 async def user_dashboard(user: dict = Depends(get_current_user)):
     return {"message": f"Welcome, {user['name']}!", "role": "User"}
 
-
-
-
+@router.get("/test_connect")
+async def test_connection():
+    try:
+        # Simple query to check the database connection
+        return {"message": "Inside User routes test connection"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
 
 

@@ -1,13 +1,33 @@
-import { StyledEngineProvider } from '@mui/material/styles';
-import './App.css';
-import SimpleContainer from './components/SimpleContainer';
+import { JSX, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import Login from "./pages/auth/Login";
+import Dashboard from "./pages/dashboard/Dashboard";
+import { RootState } from "./redux/store";
+import "./styles/theme.css";
 
-function App() {
-  return (
-    <StyledEngineProvider injectFirst>
-      <SimpleContainer />
-    </StyledEngineProvider>
-  )
-}
+const PrivateRoute = ({ children }: { children: JSX.Element }) => {
+	const token = localStorage.getItem("token");
+	return token ? children : <Navigate to="/login" replace />;
+};
 
-export default App
+
+const App = () => {
+	const { token } = useSelector((state: RootState) => state.auth);
+
+	useEffect(() => {
+		console.log("Token:", token); // Debugging purpose
+	}, [token]);
+
+	return (
+		<Router>
+			<Routes>
+				<Route path="/login" element={<Login />} />
+				<Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+				<Route path="*" element={<Navigate to="/login" replace />} />
+			</Routes>
+		</Router>
+	);
+};
+
+export default App;
