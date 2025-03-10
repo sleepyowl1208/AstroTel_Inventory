@@ -1,6 +1,12 @@
 import { createTheme } from "@mui/material/styles";
 
-const theme = createTheme({
+export const lightTheme = createTheme({
+    palette: {
+        mode: "light",
+        primary: {
+            main: "#6200ea",
+        },
+    },
     components: {
         MuiInputBase: {
             styleOverrides: {
@@ -17,9 +23,6 @@ const theme = createTheme({
                     "& fieldset": {
                         border: "1px solid transparent !important"
                     },
-                    "& .MuiFocused": {
-
-                    }
                 }
             }
         },
@@ -34,9 +37,6 @@ const theme = createTheme({
                         background: "var(--purpur-body-background)",
                         padding: '0 0.5rem'
                     },
-                    "&.MuiInputLabel-root": {
-                        background: "var(--purpur-body-background)",
-                    }
                 },
             },
         },
@@ -52,7 +52,6 @@ const theme = createTheme({
                     "&.hover": {
                         background: "var(--purpur-primary-color)",
                     },
-
                     "&.btn--primary-light": {
                         background: "var(--purpur-color-background-interactive-primary-negative)",
                         color: "var(--purpur-color-text-interactive-on-primary-negative)",
@@ -61,8 +60,54 @@ const theme = createTheme({
                     }
                 }
             }
+        },
+        MuiAppBar: {
+            styleOverrides: {
+                root: {
+                    background: "transparent",
+                }
+            }
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    background: "var(--purpur-body-background)",
+                    boxShadow: "none"
+                }
+            }
+        },
+        MuiButtonBase: {
+            styleOverrides: {
+                root: {
+                    "& > svg": {
+                        fill: "var(--purpur-primary-color)"
+                    }
+                }
+            }
+        },
+        MuiCard: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    "&.employee-card": {
+                        background: theme.palette.mode === "light"
+                            ? "var(--purpur-color-transparent-black-50)"
+                            : "var(--purpur-color-transparent-black-300)",
+                        boxShadow: "none",
+                        borderRadius: "var(--purpur-border-radius-lg)"
+                    }
+                })
+            }
         }
-    },
-});
+    }
+},
+);
 
-export default theme;
+export const darkTheme = createTheme({
+    palette: {
+        mode: "dark",
+        primary: {
+            main: "#90caf9",
+        },
+    },
+    components: lightTheme.components,
+});

@@ -1,11 +1,10 @@
-import { ThemeProvider } from "@mui/material/styles";
 import { JSX, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Login from "./pages/auth/Login";
+import CustomerDetails from "./pages/customers/CustomerDetails";
 import Dashboard from "./pages/dashboard/Dashboard";
 import { RootState } from "./redux/store";
-import theme from "./styles/theme";
 import "./styles/theme.css";
 
 
@@ -23,15 +22,15 @@ const App = () => {
 	}, [token]);
 
 	return (
-		<ThemeProvider theme={theme}>
-			<Router>
-				<Routes>
-					<Route path="/login" element={<Login />} />
-					<Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-					<Route path="*" element={<Navigate to="/login" replace />} />
-				</Routes>
-			</Router>
-		</ThemeProvider>
+		<Router>
+			<Routes>
+				<Route path="/login" element={<Login />} />
+				<Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+				{/* <Route path="/customer-details/:accountId" element={<CustomerDetails />} /> */}
+				<Route path="/customer/:accountId" element={<CustomerDetails />} />
+				<Route path="*" element={<Navigate to="/login" replace />} />
+			</Routes>
+		</Router>
 	);
 };
 

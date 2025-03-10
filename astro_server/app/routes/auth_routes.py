@@ -63,6 +63,7 @@ def decode_token(token: str):
 
 # **Dependency to Get Current User**
 async def get_current_user(token: str = Depends(oauth2_scheme)):
+    print(f"🔍 Token received: {token}")
     return decode_token(token)
 
 # **Dependency to Check User Role**
@@ -117,15 +118,16 @@ async def login(request: Request, db=Depends(get_db)):
         if not user or password != user["password"]:
             return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
 
-        first_name = user["name"].split()[0]
-        token = create_access_token({"sub": user["email"], "role": user["role"], "name": first_name})
+        # full_name = user["name"].split()
+        full_name = "".join(user["name"])
+        token = create_access_token({"sub": user["email"], "role": user["role"], "name": full_name})
 
         return JSONResponse(status_code=200, content={
             "access_token": token,
             "role": user["role"],
             "token_type": "bearer",
-            "message": f"Welcome back {first_name}! You are successfully logged in. 😊",
-            "name": first_name
+            "message": f"Welcome back {full_name}! You are successfully logged in. 😊",
+            "name": full_name
         })
 
     except Exception as e:

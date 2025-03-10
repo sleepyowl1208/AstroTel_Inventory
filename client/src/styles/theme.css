@@ -19,7 +19,7 @@ html, body {
 /* Dark Theme Variables */
 [data-theme="dark"] {
   --purpur-primary-color: #bb86fc;
-  --purpur-background-color: #121212;
+  --purpur-background-color: #000000;
   --purpur-text-color: #e0e0e0;
   --purpur-heading-color: #ffffff;
   --purpur-body-background: #181818;
@@ -380,8 +380,4 @@ input:-webkit-autofill {
 input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 50px white inset;
     -webkit-text-fill-color: #333;
-}
-
-.biometric-login-icon {
-  padding: 0 0.5rem;
 }

@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from asyncpg import Pool
 from asyncpg.exceptions import UniqueViolationError
 from pydantic import BaseModel, EmailStr
 from typing import List, Literal
 import random
+import logging
+
+from app.routes.auth_routes import get_current_user
+
+logger = logging.getLogger(__name__)
 
 from app.database import get_db
 
@@ -23,7 +28,7 @@ class CustomerCreate(BaseModel):
     accounttype: Literal["Residential", "Business"]
     name: str
     email: EmailStr
-    main_phone: str
+    mainphone: str
     country: str
     pricelist: Literal["Basic", "Standard", "Premium", "Enterprise"]
 
@@ -35,15 +40,15 @@ def generate_account_id():
 @router.post("/customers", response_model=Customer, status_code=status.HTTP_201_CREATED)
 async def create_customer(customer: CustomerCreate, db: Pool = Depends(get_db)):
     query = """
-        INSERT INTO customers (account_id, account_type, name, email, main_phone, country, price_list)
+        INSERT INTO customers (accountid, account_type, name, email, mainphone, country, price_list)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING account_id, account_type, name, email, main_phone, country, price_list
+        RETURNING accountid, account_type, name, email, mainphone, country, price_list
     """
     try:
         new_customer = await db.fetchrow(
             query,
             generate_account_id(), customer.account_type, customer.name, customer.email,
-            customer.main_phone, customer.country, customer.price_list
+            customer.mainphone, customer.country, customer.price_list
         )
         return Customer(**dict(new_customer))
     except UniqueViolationError:
@@ -71,23 +76,46 @@ async def test_connection(db: Pool = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
 # Get a specific customer by ID
+# @router.get("/customers/{accountid}", response_model=Customer)
+# async def get_customer(accountid: str, db: Pool = Depends(get_db)):
+#     try:
+#         query = "SELECT * FROM customers WHERE accountid = $1"
+#         customer = await db.fetchrow(query, accountid)
+#         if not customer:
+#             raise HTTPException(status_code=404, detail="Customer not found. Enter correct AccountID which looks like 'Astro-120892'")
+#         return Customer(**dict(customer))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+
 @router.get("/customers/{accountid}", response_model=Customer)
-async def get_customer(accountid: str, db: Pool = Depends(get_db)):
+async def get_customer(
+    accountid: str,
+    request: Request,  # ✅ Log the request headers
+    db: Pool = Depends(get_db),
+    current_user: dict = Depends(get_current_user),  # ✅ Authentication required
+):
+    print("✅ Inside get_customer function")  # 🔍 Debugging
+    print(f"Headers: {request.headers}")  # 🔍 Log headers
+    logger.info(f"Fetching customer with accountid: {accountid}")
+
     try:
         query = "SELECT * FROM customers WHERE accountid = $1"
         customer = await db.fetchrow(query, accountid)
         if not customer:
-            raise HTTPException(status_code=404, detail="Customer not found. Enter correct AccountID which looks like 'Astro-120892'")
+            logger.warning(f"Customer {accountid} not found")
+            raise HTTPException(status_code=404, detail="Customer not found.")
         return Customer(**dict(customer))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+        logger.error(f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 
 # Update a customer
 @router.put("/customers/{accountid}", response_model=Customer)
-async def update_customer(account_id: str, customer_data: CustomerCreate, db: Pool = Depends(get_db)):
+async def update_customer(accountid: str, customer_data: CustomerCreate, db: Pool = Depends(get_db)):
     # Check if customer exists
-    check_query = "SELECT * FROM customers WHERE account_id = $1"
-    existing_customer = await db.fetchrow(check_query, account_id)
+    check_query = "SELECT * FROM customers WHERE accountid = $1"
+    existing_customer = await db.fetchrow(check_query, accountid)
     if not existing_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
 
@@ -100,15 +128,15 @@ async def update_customer(account_id: str, customer_data: CustomerCreate, db: Po
 
     # Perform update
     query = """
-        UPDATE customers SET account_type = $1, name = $2, email = $3, main_phone = $4, country = $5, price_list = $6
-        WHERE account_id = $7
-        RETURNING account_id, account_type, name, email, main_phone, country, price_list
+        UPDATE customers SET account_type = $1, name = $2, email = $3, mainphone = $4, country = $5, price_list = $6
+        WHERE accountid = $7
+        RETURNING accountid, account_type, name, email, mainphone, country, price_list
     """
     updated_customer = await db.fetchrow(
         query,
         customer_data.account_type, customer_data.name, customer_data.email,
-        customer_data.main_phone, customer_data.country, customer_data.price_list,
-        account_id
+        customer_data.mainphone, customer_data.country, customer_data.price_list,
+        accountid
     )
     return Customer(**dict(updated_customer))
 

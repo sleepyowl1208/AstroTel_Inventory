@@ -5,14 +5,11 @@ import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import BioMetric from "../../assets/icons/biometric-login.svg";
-import TeliaLogo from "../../assets/icons/telia_logo.svg";
 import LoginImage from "../../assets/images/loginPage3.png";
+import AppLogo from "../../components/AppLogo/AppLogo";
 import { loginUser } from "../../features/auth/authSlice";
 import { AppDispatch } from "../../redux/store";
 import "./auth.css";
-
-
-
 
 interface LoginFormInputs {
     email: string;
@@ -81,10 +78,8 @@ const Login = () => {
                         justifyContent: "space-between"
                     }}
                 >
-                    <Box sx={{ p: 2 }}>
-                        <img src={TeliaLogo} className="official-logo" />
-                    </Box>
-                    <Box sx={{ margin: "auto", px: 0, m: 2.5, boxShadow: 0, borderRadius: 2 }}>
+                    <AppLogo px={2} py={2} />
+                    <Box sx={{ px: 0, m: 2.5, boxShadow: 0, borderRadius: 2 }}>
                         <Typography variant="h5" fontWeight={600}>Login</Typography>
                         {error && <Typography color="error">{error}</Typography>}
                         <form onSubmit={handleSubmit(onSubmit)}>
