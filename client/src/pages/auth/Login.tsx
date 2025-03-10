@@ -150,7 +150,7 @@ const Login = () => {
 
                         </Box>
                     </Box>
-                    <Box sx={{ p: 2 }}>© 2025 Telia Sweden.</Box>
+                    <Box sx={{ p: 2 }}>© 2025 Telia Sweden</Box>
                 </Grid>
 
             </Grid>
