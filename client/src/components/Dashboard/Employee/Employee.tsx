@@ -18,7 +18,6 @@ const Employee = () => {
     //     return "Evening";
     // };
 
-    console.log("current theme", theme);
     useEffect(() => {
         // Prevent going back to dashboard after logout
         window.history.pushState(null, "", window.location.href);
